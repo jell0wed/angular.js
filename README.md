@@ -20,7 +20,8 @@ Our master branch for angularjs is dmxfee-master
                                     --> (custom updates)
 ```
  
-dmxfee-master branch is originally forked off from Angular's v1.5.5(commit:25d4e5cca4fa615e49d65976223c6deb5b485b4c) to include custom optimizations made by our developers. **This will become our Angular master branch for now on and any new migrations to new angular versions needs to be merged into this branch**.
+dmxfee-master branch is originally forked off from Angular's v1.5.5(commit:25d4e5cca4fa615e49d65976223c6deb5b485b4c). 
+**This will become our Angular master branch for now on and any new migrations to new angular versions needs to be merged into this branch**.
  
  
 # Getting latest updates from Angular
@@ -69,6 +70,7 @@ Fork dmxfee/bower-angular:
 ```
  
 Generate angular's build files and copy them to bower-angular repository
+
 ```
    * Switch to repo: dmxfee/angular.js (branch: dmxfee-master)
    * npm install
@@ -90,6 +92,7 @@ Generate angular's build files and copy them to bower-angular repository
 ```
  
 # Making Custom Changes to our master branch
+
 ```
 * Fork dmxfee/angular.js into your github account (dev/angular.js)
 * create a new branch off dmxfee-master
@@ -101,8 +104,7 @@ Generate angular's build files and copy them to bower-angular repository
     * grunt test:e2e
 * Push your changes.
 * Create PR against dmxfee/angular.js
-
-
+```
 
 
 
