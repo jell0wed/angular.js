@@ -3,7 +3,7 @@
 Our master branch for angularjs is dmxfee-master
  
 # Change-list
-  * Aug 10, 2016 - Opt out digest loops for $http() when requestParams.skipApply is set to true (https://embed.plnkr.co/feOmt98Q6QnWjI1iQzD9/).
+  * Aug 10, 2016 - [PR#1](https://github.com/dmxfee/angular.js/pull/1) - Opt out digest loops for $http() when requestParams.skipApply is set to true (e.g. https://embed.plnkr.co/feOmt98Q6QnWjI1iQzD9/).
  
  
 # Fork Details
