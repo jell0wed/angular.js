@@ -73,14 +73,14 @@ Generate angular's build files and copy them to bower-angular repository
 
 ```
    * Switch to repo: dmxfee/angular.js (branch: dmxfee-master)
+   * npm install grunt 
+   * npm install bower
    * npm install
-   * if grunt, bower not installed globally run 'npm install grunt', 'npm install bower'
    * grunt package
-      * If you run into an issue of missing npm package, open package.json and remove preinstall step
+      * If you run into an issue of missing an npm package, open package.json and remove preinstall step and repeat npm install and grunt package.
       * "preinstall": "node scripts/npm/check-node-modules.js --purge"
-      * Also we may have to fix the automatically generated stamped versions in build files. I temporarily overwrote
+      * Also, to fix the auto generated stamped versions in the generated build file, override
       * "NG_VERSION" object with desired values (in gruntfile.json) before running 'grunt package'.
-      * DONOT CHECK IN THESE TEMP CHANGES.
    * grunt test:unit
    * grunt test:e2e
    * If all good, copy these files from "build" folder into the bower-angular repo folder.
