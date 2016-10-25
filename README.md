@@ -1,3 +1,111 @@
+# AngularJS Fork
+ 
+Our master branch for angularjs is dmxfee-master
+ 
+# Change-list
+  * Aug 10, 2016 - Opt out digest loops for $http() when requestParams.skipApply is set to true (https://embed.plnkr.co/feOmt98Q6QnWjI1iQzD9/).
+ 
+ 
+# Fork Details
+ 
+```
+(angular/angular.js) ---> 1.5.5 ---> 1.5.6 ---> 1.5.7 ---> 1.5.8 ---> master
+        |
+(dmxfee/angular.js)  ---> 1.5.5 ---> 1.5.6 ---> 1.5.7 ---> 1.5.8 ---> master
+                            |
+ 
+                            |
+ 
+                            |---> dmxfee-master
+                                    --> (custom updates)
+```
+ 
+dmxfee-master branch is originally forked off from Angular's v1.5.5(commit:25d4e5cca4fa615e49d65976223c6deb5b485b4c) to include custom optimizations made by our developers. **This will become our Angular master branch for now on and any new migrations to new angular versions needs to be merged into this branch**.
+ 
+ 
+# Getting latest updates from Angular
+ 
+Below instructions are best effort steps for future integrations, please update if there are any inconsistencies.
+ 
+## Sync our forked branch (dmxfee/angular.js) with the upstream source (angular/angular.js)
+ 
+Github UI makes it little tricky but this can be easily done with git command line. Here are good references:
+  * https://2buntu.com/articles/1459/keeping-your-forked-repo-synced-with-the-upstream-source/
+  * https://help.github.com/articles/syncing-a-fork/
+ 
+These are the steps are to sync master branches. We may also want do similar steps for the branch we're interested in (e.g. v1.5.x) to get all changes that were never merged back into master.
+ 
+```
+  * git clone https://github.com/dmxfee/angular.js.git
+  * cd angular.js
+  * git remote add upstream https://github.com/angular/angular.js.git
+     * check your remotes - 'git remote show origin', 'git remote show upstream'
+     * git fetch upstream
+   * git merge upstream/master
+      * (resolve any conflicts here)
+   * git push origin master
+   * git push origin master --tags //pushes all tags too
+ 
+```
+## Merge in future angular version (e.g. v1.5.9) into dmxfee-master
+Create a branch from dmxfee-master, merge the needed tag# and send a PR.
+```
+   * git checkout dmxfee-master
+   * git checkout -b dmxfee-merge-v1.5.9
+   * git merge 'tagname'
+   * (resolve conflicts)
+   * git push
+   * create PR against dmxfee-master
+```
+ 
+## Push the build files to dmxfee/angular-bower
+ 
+The new angular build files needs to be pushed to dmxfee/angular-bower branch. Our project fetches the angular code from this github branch.
+ 
+Fork dmxfee/bower-angular:
+```
+   * git clone https://github.com/dmxfee/bower-angular.git
+   * git checkout -b v1.5.9 (some meaningful branch name)
+```
+ 
+Generate angular's build files and copy them to bower-angular repository
+```
+   * Switch to repo: dmxfee/angular.js (branch: dmxfee-master)
+   * npm install
+   * if grunt, bower not installed globally run 'npm install grunt', 'npm install bower'
+   * grunt package
+      * If you run into an issue of missing npm package, open package.json and remove preinstall step
+      * "preinstall": "node scripts/npm/check-node-modules.js --purge"
+      * Also we may have to fix the automatically generated stamped versions in build files. I temporarily overwrote
+      * "NG_VERSION" object with desired values (in gruntfile.json) before running 'grunt package'.
+      * DONOT CHECK IN THESE TEMP CHANGES.
+   * grunt test:unit
+   * grunt test:e2e
+   * If all good, copy these files from "build" folder into the bower-angular repo folder.
+      * angular.js, angular.min.js, angular.min.js.map, angular-csp.css
+      * update the version into bower.json and package.json
+ 
+   * send the PR to bower-angular branch.
+   * once it goes in, open our project's bower.json and update the commit hash for angular and also in resolutions.
+```
+ 
+# Making Custom Changes to our master branch
+```
+* Fork dmxfee/angular.js into your github account (dev/angular.js)
+* create a new branch off dmxfee-master
+* Make your changes.
+* Make sure unit tests and scenario tests are still passing
+    * npm install
+    * grunt package
+    * grunt test:unit
+    * grunt test:e2e
+* Push your changes.
+* Create PR against dmxfee/angular.js
+
+
+
+
+
 AngularJS [![Build Status](https://travis-ci.org/angular/angular.js.svg?branch=master)](https://travis-ci.org/angular/angular.js)
 =========
 
