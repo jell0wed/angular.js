@@ -374,8 +374,8 @@ function $HttpProvider() {
    **/
   var interceptorFactories = this.interceptors = [];
 
-  this.$get = ['$httpBackend', '$$cookieReader', '$cacheFactory', '$rootScope', '$q', '$injector',
-      function($httpBackend, $$cookieReader, $cacheFactory, $rootScope, $q, $injector) {
+  this.$get = ['$httpBackend', '$$cookieReader', '$cacheFactory', '$rootScope', '$q', '$$q', '$injector',
+      function($httpBackend, $$cookieReader, $cacheFactory, $rootScope, $q, $$q, $injector) {
 
     var defaultCache = $cacheFactory('$http');
 
@@ -978,7 +978,7 @@ function $HttpProvider() {
       };
 
       var chain = [serverRequest, undefined];
-      var promise = $q.when(config);
+      var promise = (config.skipApply ? $$q : $q).when(config);
 
       // apply interceptors
       forEach(reversedInterceptors, function(interceptor) {
@@ -1029,7 +1029,7 @@ function $HttpProvider() {
                                   config.transformResponse);
         return (isSuccess(response.status))
           ? resp
-          : $q.reject(resp);
+          : (config.skipApply ? $$q : $q).reject(resp);
       }
 
       function executeHeaderFns(headers, config) {
@@ -1215,7 +1215,7 @@ function $HttpProvider() {
      * $httpBackend, defaults, $log, $rootScope, defaultCache, $http.pendingRequests
      */
     function sendReq(config, reqData) {
-      var deferred = $q.defer(),
+      var deferred = (config.skipApply ? $$q : $q).defer(),
           promise = deferred.promise,
           cache,
           cachedResp,
@@ -1264,7 +1264,7 @@ function $HttpProvider() {
           reqHeaders[(config.xsrfHeaderName || defaults.xsrfHeaderName)] = xsrfValue;
         }
 
-        $httpBackend(config.method, url, reqData, done, reqHeaders, config.timeout,
+        $httpBackend(config.method, url, reqData, getDoneCallback(config.skipApply), reqHeaders, config.timeout,
             config.withCredentials, config.responseType,
             createApplyHandlers(config.eventHandlers),
             createApplyHandlers(config.uploadEventHandlers));
@@ -1296,30 +1296,41 @@ function $HttpProvider() {
 
 
       /**
-       * Callback registered to $httpBackend():
-       *  - caches the response if desired
-       *  - resolves the raw $http promise
-       *  - calls $apply
-       */
-      function done(status, response, headersString, statusText) {
-        if (cache) {
-          if (isSuccess(status)) {
-            cache.put(url, [status, response, parseHeaders(headersString), statusText]);
-          } else {
-            // remove promise from the cache
-            cache.remove(url);
+        * Returns the callback registered to $httpBackend() with a closure on skipApply
+      */
+      function getDoneCallback(skipApply) {
+        /**
+         * Callback registered to $httpBackend():
+         *  - caches the response if desired
+         *  - resolves the raw $http promise
+         *  - calls $apply
+         */
+        return function done(status, response, headersString, statusText) {
+          if (cache) {
+            if (isSuccess(status)) {
+              cache.put(url, [status, response, parseHeaders(headersString), statusText]);
+            } else {
+              // remove promise from the cache
+              cache.remove(url);
+            }
           }
-        }
 
-        function resolveHttpPromise() {
-          resolvePromise(response, status, headersString, statusText);
-        }
+          function resolveHttpPromise() {
+            resolvePromise(response, status, headersString, statusText);
+          }
 
-        if (useApplyAsync) {
-          $rootScope.$applyAsync(resolveHttpPromise);
-        } else {
-          resolveHttpPromise();
-          if (!$rootScope.$$phase) $rootScope.$apply();
+          if (skipApply) {
+            // if skipApply is true,
+            // resolve the promise without evalAsync or $rootScope.apply()
+            resolveHttpPromise();
+          } else {
+            if (useApplyAsync) {
+              $rootScope.$applyAsync(resolveHttpPromise);
+            } else {
+              resolveHttpPromise();
+              if (!$rootScope.$$phase) $rootScope.$apply();
+            }
+          }
         }
       }
 
