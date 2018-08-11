@@ -287,6 +287,7 @@ function qFactory(nextTick, exceptionHandler, errorOnUnhandledRejections) {
   var $qMinErr = minErr('$q', TypeError);
   var queueSize = 0;
   var checkQueue = [];
+  var promisesCount = 0;
 
   /**
    * @ngdoc method
@@ -313,6 +314,7 @@ function qFactory(nextTick, exceptionHandler, errorOnUnhandledRejections) {
 
   function Promise() {
     this.$$state = { status: 0 };
+    promisesCount++;
   }
 
   extend(Promise.prototype, {
@@ -426,6 +428,8 @@ function qFactory(nextTick, exceptionHandler, errorOnUnhandledRejections) {
       }
     } catch (e) {
       doReject(e);
+    } finally {
+      promisesCount--;
     }
 
     function doResolve(val) {
@@ -449,9 +453,13 @@ function qFactory(nextTick, exceptionHandler, errorOnUnhandledRejections) {
   }
 
   function $$reject(promise, reason) {
-    promise.$$state.value = reason;
-    promise.$$state.status = 2;
-    scheduleProcessQueue(promise.$$state);
+    try {
+      promise.$$state.value = reason;
+      promise.$$state.status = 2;
+      scheduleProcessQueue(promise.$$state);
+    } finally {
+      promisesCount--;
+    }
   }
 
   function notifyPromise(promise, progress) {
