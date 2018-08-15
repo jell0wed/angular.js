@@ -243,6 +243,8 @@ function $$QProvider() {
  */
 function qFactory(nextTick, exceptionHandler) {
   var $qMinErr = minErr('$q', TypeError);
+  window.promises = window.promises || {};
+  window.promises.angular = window.promises.angular || {pendingCount: 0};
 
   /**
    * @ngdoc method
@@ -254,17 +256,22 @@ function qFactory(nextTick, exceptionHandler) {
    *
    * @returns {Deferred} Returns a new instance of deferred.
    */
-  var defer = function() {
-    var d = new Deferred();
+  var defer = function(trackPromise) {
+    var d = new Deferred(trackPromise);
     //Necessary to support unbound execution :/
     d.resolve = simpleBind(d, d.resolve);
     d.reject = simpleBind(d, d.reject);
     d.notify = simpleBind(d, d.notify);
     return d;
-  };
+  }
 
-  function Promise() {
+  function Promise(trackPromise) {
     this.$$state = { status: 0 };
+  
+    this.trackPromise = typeof(trackPromise) !== 'undefined' ? trackPromise : true;
+    if(this.trackPromise) {
+      window.promises.angular.pendingCount++;
+    }
   }
 
   extend(Promise.prototype, {
@@ -361,6 +368,9 @@ function qFactory(nextTick, exceptionHandler) {
         } else {
           this.promise.$$state.value = val;
           this.promise.$$state.status = 1;
+          if(this.promise.trackPromise) {
+            window.promises.angular.pendingCount--;
+          }
           scheduleProcessQueue(this.promise.$$state);
         }
       } catch (e) {
@@ -386,9 +396,15 @@ function qFactory(nextTick, exceptionHandler) {
     },
 
     $$reject: function(reason) {
-      this.promise.$$state.value = reason;
-      this.promise.$$state.status = 2;
-      scheduleProcessQueue(this.promise.$$state);
+      try {
+        this.promise.$$state.value = reason;
+        this.promise.$$state.status = 2;
+        scheduleProcessQueue(this.promise.$$state);
+      } finally {
+        if(this.trackPromise) {
+          window.promises.angular.pendingCount--;
+        }
+      }
     },
 
     notify: function(progress) {
