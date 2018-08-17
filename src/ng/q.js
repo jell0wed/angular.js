@@ -401,7 +401,7 @@ function qFactory(nextTick, exceptionHandler) {
         this.promise.$$state.status = 2;
         scheduleProcessQueue(this.promise.$$state);
       } finally {
-        if(this.trackPromise) {
+        if(this.promise.trackPromise) {
           window.promises.angular.pendingCount--;
         }
       }
