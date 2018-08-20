@@ -375,7 +375,7 @@ function qFactory(nextTick, exceptionHandler) {
           if(this.promise.trackPromise) {
             window.promises.angular.pendingCount--;
             if(window.desktop && window.WeakReference) {
-              window.promises.pending.set(this.promise.key, undefined);
+              //window.promises.pending.set(this.promise.key, undefined);
             }
           }
           scheduleProcessQueue(this.promise.$$state);
@@ -411,7 +411,7 @@ function qFactory(nextTick, exceptionHandler) {
         if(this.promise.trackPromise) {
           window.promises.angular.pendingCount--;
           if(window.desktop && window.WeakReference) {
-            window.promises.pending.set(this.promise.key, undefined);
+            //window.promises.pending.set(this.promise.key, undefined);
           }
         }
       }
