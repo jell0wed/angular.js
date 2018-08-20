@@ -245,7 +245,7 @@ function qFactory(nextTick, exceptionHandler) {
   var $qMinErr = minErr('$q', TypeError);
   window.promises = window.promises || {};
   window.promises.angular = window.promises.angular || {pendingCount: 0};
-
+  
   /**
    * @ngdoc method
    * @name ng.$q#defer
