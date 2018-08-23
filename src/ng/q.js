@@ -243,7 +243,7 @@ function $$QProvider() {
  */
 function qFactory(nextTick, exceptionHandler) {
   var $qMinErr = minErr('$q', TypeError);
-  window.promises = window.promises || {pending: new Map()};
+  window.promises = window.promises || {};
   window.promises.angular = window.promises.angular || {pendingCount: 0};
   
   /**
@@ -271,10 +271,6 @@ function qFactory(nextTick, exceptionHandler) {
     this.trackPromise = typeof(trackPromise) !== 'undefined' ? trackPromise : true;
     if(this.trackPromise) {
       window.promises.angular.pendingCount++;
-      if(window.desktop && window.WeakReference) {
-        this.key = '_' + Math.random().toString(36).substr(2, 9);
-        window.promises.pending.set(this.key, new window.WeakReference(this));
-      }
     }
   }
 
@@ -374,9 +370,6 @@ function qFactory(nextTick, exceptionHandler) {
           this.promise.$$state.status = 1;
           if(this.promise.trackPromise) {
             window.promises.angular.pendingCount--;
-            if(window.desktop && window.WeakReference) {
-              //window.promises.pending.set(this.promise.key, undefined);
-            }
           }
           scheduleProcessQueue(this.promise.$$state);
         }
@@ -410,9 +403,6 @@ function qFactory(nextTick, exceptionHandler) {
       } finally {
         if(this.promise.trackPromise) {
           window.promises.angular.pendingCount--;
-          if(window.desktop && window.WeakReference) {
-            //window.promises.pending.set(this.promise.key, undefined);
-          }
         }
       }
     },
