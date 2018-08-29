@@ -269,7 +269,7 @@ function qFactory(nextTick, exceptionHandler) {
     this.$$state = { status: 0 };
   
     this.trackPromise = typeof(trackPromise) !== 'undefined' ? trackPromise : true;
-    if(this.trackPromise) {
+    if (this.trackPromise) {
       window.promises.angular.pendingCount++;
     }
   }
@@ -368,7 +368,7 @@ function qFactory(nextTick, exceptionHandler) {
         } else {
           this.promise.$$state.value = val;
           this.promise.$$state.status = 1;
-          if(this.promise.trackPromise) {
+          if (this.promise.trackPromise) {
             window.promises.angular.pendingCount--;
           }
           scheduleProcessQueue(this.promise.$$state);
@@ -396,14 +396,12 @@ function qFactory(nextTick, exceptionHandler) {
     },
 
     $$reject: function(reason) {
-      try {
-        this.promise.$$state.value = reason;
-        this.promise.$$state.status = 2;
-        scheduleProcessQueue(this.promise.$$state);
-      } finally {
-        if(this.promise.trackPromise) {
-          window.promises.angular.pendingCount--;
-        }
+      this.promise.$$state.value = reason;
+      this.promise.$$state.status = 2;
+      scheduleProcessQueue(this.promise.$$state);
+
+      if (this.promise.trackPromise) {
+        window.promises.angular.pendingCount--;
       }
     },
 
