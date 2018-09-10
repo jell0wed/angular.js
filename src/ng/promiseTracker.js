@@ -27,11 +27,11 @@
  *
  */
 function $PromiseTrackerHandlerProvider() {
-    this.$get = ['', function() {
+    this.$get = function() {
         return function(promise) {
-            return; // no-op by default (tracking is disabled by default)
+            console.log(promise); // no-op by default (tracking is disabled by default)
         };
-    }];
+    };
 }
 
 /**
@@ -63,9 +63,9 @@ function $PromiseTrackerHandlerProvider() {
  *
  */
 function $PromiseUntrackerHandlerProvider() {
-    this.$get = ['', function() {
+    this.$get = function() {
         return function(promise) {
-            return; // no-op by default (tracking is disabled by default)
+            console.log(promise); // no-op by default (tracking is disabled by default)
         };
-    }];
+    }
 }
