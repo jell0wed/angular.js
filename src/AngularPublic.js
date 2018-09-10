@@ -228,6 +228,8 @@ function publishExternalAPI(angular) {
         $controller: $ControllerProvider,
         $document: $DocumentProvider,
         $exceptionHandler: $ExceptionHandlerProvider,
+        $trackPromiseHandler: $PromiseTrackerHandlerProvider,
+        $untrackPromiseHandler: $PromiseUntrackerHandlerProvider,
         $filter: $FilterProvider,
         $$forceReflow: $$ForceReflowProvider,
         $interpolate: $InterpolateProvider,

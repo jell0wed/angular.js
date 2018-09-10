@@ -218,18 +218,20 @@
  */
 function $QProvider() {
 
-  this.$get = ['$rootScope', '$exceptionHandler', function($rootScope, $exceptionHandler) {
-    return qFactory(function(callback) {
-      $rootScope.$evalAsync(callback);
-    }, $exceptionHandler);
+  this.$get = ['$rootScope', '$exceptionHandler', '$trackPromiseHandler', '$untrackPromiseHandler', 
+    function($rootScope, $exceptionHandler, $trackPromiseHandler, $untrackPromiseHandler) {
+      return qFactory(function(callback) {
+        $rootScope.$evalAsync(callback);
+      }, $exceptionHandler, $trackPromiseHandler, $untrackPromiseHandler);
   }];
 }
 
 function $$QProvider() {
-  this.$get = ['$browser', '$exceptionHandler', function($browser, $exceptionHandler) {
-    return qFactory(function(callback) {
-      $browser.defer(callback);
-    }, $exceptionHandler);
+  this.$get = ['$browser', '$exceptionHandler','$trackPromiseHandler', '$untrackPromiseHandler', 
+    function($browser, $exceptionHandler, $trackPromiseHandler, $untrackPromiseHandler) {
+      return qFactory(function(callback) {
+        $browser.defer(callback);
+      }, $exceptionHandler, $trackPromiseHandler, $untrackPromiseHandler);
   }];
 }
 
@@ -239,12 +241,14 @@ function $$QProvider() {
  * @param {function(function)} nextTick Function for executing functions in the next turn.
  * @param {function(...*)} exceptionHandler Function into which unexpected exceptions are passed for
  *     debugging purposes.
+ * @param {function(...*)} trackPromiseHandler Function into which new promises are passed for
+ *     tracking purposes.
+ * @param {function(...*)} untrackPromiseHandler Function into which finished promises are passed for
+ *     tracking purposes.
  * @returns {object} Promise manager.
  */
-function qFactory(nextTick, exceptionHandler) {
+function qFactory(nextTick, exceptionHandler, trackPromiseHandler, untrackPromiseHandler) {
   var $qMinErr = minErr('$q', TypeError);
-  window.promises = window.promises || {};
-  window.promises.angular = window.promises.angular || {pendingCount: 0};
   
   /**
    * @ngdoc method
@@ -256,8 +260,8 @@ function qFactory(nextTick, exceptionHandler) {
    *
    * @returns {Deferred} Returns a new instance of deferred.
    */
-  var defer = function(trackPromise) {
-    var d = new Deferred(trackPromise);
+  var defer = function(keepTrack) {
+    var d = new Deferred(keepTrack);
     //Necessary to support unbound execution :/
     d.resolve = simpleBind(d, d.resolve);
     d.reject = simpleBind(d, d.reject);
@@ -265,12 +269,12 @@ function qFactory(nextTick, exceptionHandler) {
     return d;
   }
 
-  function Promise(trackPromise) {
+  function Promise(keepTrack) {
     this.$$state = { status: 0 };
+    this.keepTrack = keepTrack !== undefined ? keepTrack : true;
   
-    this.trackPromise = typeof(trackPromise) !== 'undefined' ? trackPromise : true;
-    if (this.trackPromise) {
-      window.promises.angular.pendingCount++;
+    if (this.keepTrack === true) {
+      trackPromiseHandler(this);
     }
   }
 
@@ -279,7 +283,7 @@ function qFactory(nextTick, exceptionHandler) {
       if (isUndefined(onFulfilled) && isUndefined(onRejected) && isUndefined(progressBack)) {
         return this;
       }
-      var result = new Deferred(false); // do not track then as separate promises
+      var result = new Deferred(false); // do not track the .then() as separate promises
 
       this.$$state.pending = this.$$state.pending || [];
       this.$$state.pending.push([result, onFulfilled, onRejected, progressBack]);
@@ -289,11 +293,11 @@ function qFactory(nextTick, exceptionHandler) {
     },
 
     "catch": function(callback) {
-      return this.then(null, callback);
+      return this.then(null, callback); // .catch() promises wont count as separate promises by using the .then() callback
     },
 
     "finally": function(callback, progressBack) {
-      return this.then(function(value) {
+      return this.then(function(value) { // .finally() promises wont count as separate promises by using the .then() callback
         return handleCallback(value, true, callback);
       }, function(error) {
         return handleCallback(error, false, callback);
@@ -338,8 +342,8 @@ function qFactory(nextTick, exceptionHandler) {
     nextTick(function() { processQueue(state); });
   }
 
-  function Deferred(trackPromise) {
-    this.promise = new Promise(trackPromise);
+  function Deferred(keepTrack) {
+    this.promise = new Promise(keepTrack);
   }
 
   extend(Deferred.prototype, {
@@ -368,8 +372,8 @@ function qFactory(nextTick, exceptionHandler) {
         } else {
           this.promise.$$state.value = val;
           this.promise.$$state.status = 1;
-          if (this.promise.trackPromise) {
-            window.promises.angular.pendingCount--;
+          if (this.promise.keepTrack) {
+            untrackPromiseHandler(this.promise);
           }
           scheduleProcessQueue(this.promise.$$state);
         }
@@ -400,8 +404,8 @@ function qFactory(nextTick, exceptionHandler) {
       this.promise.$$state.status = 2;
       scheduleProcessQueue(this.promise.$$state);
 
-      if (this.promise.trackPromise) {
-        window.promises.angular.pendingCount--;
+      if (this.promise.keepTrack) {
+        untrackPromiseHandler(this.promise);
       }
     },
 
