@@ -28,10 +28,8 @@
  */
 function $PromiseTrackerHandlerProvider() {
     this.$get = function() {
-        return function(promise) {
-            console.log(promise); // no-op by default (tracking is disabled by default)
-        };
-    };
+        return; // no-op by default (tracking is disabled by default)
+    }
 }
 
 /**
@@ -64,8 +62,6 @@ function $PromiseTrackerHandlerProvider() {
  */
 function $PromiseUntrackerHandlerProvider() {
     this.$get = function() {
-        return function(promise) {
-            console.log(promise); // no-op by default (tracking is disabled by default)
-        };
+        return; // no-op by default (tracking is disabled by default)
     }
 }
