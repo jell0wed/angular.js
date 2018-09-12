@@ -271,7 +271,11 @@ function qFactory(nextTick, exceptionHandler, trackPromiseHandler, untrackPromis
 
   function Promise(keepTrack) {
     this.$$state = { status: 0 };
-    this.keepTrack = keepTrack !== undefined ? keepTrack : true;
+
+    // some built-in angular module may use promises when the dependencies are not yet loaded, make sure not to track those
+    if(trackPromiseHandler && untrackPromiseHandler) {
+      this.keepTrack = keepTrack !== undefined ? keepTrack : true;
+    }
   
     if (this.keepTrack === true) {
       trackPromiseHandler(this);
