@@ -180,9 +180,31 @@ describe('q', function() {
     }
   };
 
+  var mockTrackPromiseHandler = {
+    handledPromises: [],
+    handle: function(promise) {
+      mockTrackPromiseHandler.handledPromises.push(promise);
+    },
+    clear: function() {
+      mockTrackPromiseHandler.handledPromises = [];
+    }
+  };
+
+  var mockUntrackPromiseHandler = {
+    handledPromises: [],
+    handle: function(promise) {
+      mockUntrackPromiseHandler.handledPromises.push(promise);
+    },
+    clear: function() {
+      mockUntrackPromiseHandler.handledPromises = [];
+    }
+  };
+
 
   beforeEach(function() {
-    q = qFactory(mockNextTick.nextTick, noop),
+    mockTrackPromiseHandler.clear();
+    mockUntrackPromiseHandler.clear();
+    q = qFactory(mockNextTick.nextTick, noop, mockTrackPromiseHandler.handle, mockUntrackPromiseHandler.handle),
     defer = q.defer;
     deferred =  defer();
     promise = deferred.promise;
@@ -228,6 +250,11 @@ describe('q', function() {
       promise = q(noop);
       expect(promise instanceof q).toBe(true);
       /*jshint newcap: true */
+    });
+
+    it('should keep track of newly created promises by default', function() {
+      var promise = createPromise();
+      expect(mockTrackPromiseHandler.handledPromises.length).toBe(1);
     });
 
 
@@ -337,6 +364,12 @@ describe('q', function() {
 
         mockNextTick.flush();
         expect(logStr()).toBe('then1(foo)->resolve(bar); success2(foo)->foo');
+      });
+
+      it('should untrack of resolved promises', function() {
+        var promise = createPromise();
+        resolve(true);
+        expect(mockUntrackPromiseHandler.handledPromises.length).toBe(1);
       });
     });
 
