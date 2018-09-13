@@ -933,6 +933,10 @@ describe('q', function() {
         expect(logStr()).toBe('success1(foo)->foo; success2(foo)->foo');
       });
 
+      if('should untrack whenever deferred object gets resolved', function() {
+        deferred.resolve('foo');
+        expect(mockUntrackPromiseHandler.handledPromises.length).toBe(1);
+      });
 
       it('should complain if promise fulfilled with itself', function() {
         var resolveSpy = jasmine.createSpy('resolve');
@@ -1059,6 +1063,10 @@ describe('q', function() {
         expect(logStr()).toBe('error1(foo)->reject(foo); error2(foo)->reject(foo)');
       });
 
+      if('should untrack whenever deferred object gets rejected', function() {
+        deferred.resolve('foo');
+        expect(mockUntrackPromiseHandler.handledPromises.length).toBe(1);
+      });
 
       it('should do nothing if a promise was previously resolved', function() {
         promise.then(success(1), error(1));
