@@ -31,6 +31,7 @@ var angularFiles = {
     'src/ng/location.js',
     'src/ng/log.js',
     'src/ng/parse.js',
+    'src/ng/qPromiseTracker.js',
     'src/ng/q.js',
     'src/ng/raf.js',
     'src/ng/rootScope.js',

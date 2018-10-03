@@ -241,6 +241,7 @@ function publishExternalAPI(angular) {
         $log: $LogProvider,
         $parse: $ParseProvider,
         $rootScope: $RootScopeProvider,
+        $$qPromiseTracker: $$QPromiseTrackerProvider,
         $q: $QProvider,
         $$q: $$QProvider,
         $sce: $SceProvider,
