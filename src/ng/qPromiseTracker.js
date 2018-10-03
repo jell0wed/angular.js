@@ -12,11 +12,11 @@ function $$QPromiseTrackerProvider() {
     var pendingCount = 0;
 
     var trackNewPromise = function(promise) {
-        this.pendingCount++;
+        pendingCount++;
     };
 
     var untrackPromise = function(promise) {
-        this.pendingCount--;
+        pendingCount--;
     };
 
     this.$get = function() {
