@@ -4,7 +4,7 @@
  * @name $$qPromiseTracker
  *
  * @description
- * Service that tracks active promises by tracking and untracking promises as they are created,
+ * Tracks active promises by tracking and untracking promises as they are created,
  * rejected or resolved. 
  *
  */
