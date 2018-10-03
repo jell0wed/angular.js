@@ -37,7 +37,10 @@ describe('q', function() {
   // The following private functions are used to help with logging for testing invocation of the
   // promise callbacks.
   function _argToString(arg) {
-    return (typeof arg === 'object' && !(arg instanceof Error)) ? toJson(arg) : '' + arg;
+    var argCopy = arg;
+    // Fix for introducting the keepTrack state in promises
+    if(typeof arg === 'object' && arg.keepTrack) { delete argCopy.keepTrack; } 
+    return (typeof arg === 'object' && !(arg instanceof Error)) ? toJson(argCopy) : '' + arg;
   }
 
   function _argumentsToString(args) {
@@ -180,9 +183,19 @@ describe('q', function() {
     }
   };
 
+  var mockPromiseTracker = {
+    trackedPromises: [],
+    untrackedPromises: [],
+    track: function(promise) {
+      mockPromiseTracker.trackedPromises.push(promise);
+    },
+    untrack: function(promise) {
+      mockPromiseTracker.untrackedPromises.push(promise);
+    }
+  };
 
   beforeEach(function() {
-    q = qFactory(mockNextTick.nextTick, noop),
+    q = qFactory(mockNextTick.nextTick, noop, mockPromiseTracker),
     defer = q.defer;
     deferred =  defer();
     promise = deferred.promise;
@@ -199,6 +212,8 @@ describe('q', function() {
   describe('$Q', function() {
     var resolve, reject, resolve2, reject2;
     var createPromise = function() {
+      mockPromiseTracker.trackedPromises = [];
+      mockPromiseTracker.untrackedPromises = [];
       return q(function(resolveFn, rejectFn) {
         if (resolve === null) {
           resolve = resolveFn;
@@ -230,6 +245,10 @@ describe('q', function() {
       /*jshint newcap: true */
     });
 
+    it('should keep track of newly created promises by default', function() {
+      var promise = createPromise();
+      expect(mockPromiseTracker.trackedPromises.length).toBe(1);
+    });
 
     describe('resolve', function() {
       it('should fulfill the promise and execute all success callbacks in the registration order',
@@ -338,6 +357,12 @@ describe('q', function() {
         mockNextTick.flush();
         expect(logStr()).toBe('then1(foo)->resolve(bar); success2(foo)->foo');
       });
+
+      it('should untrack resolved promises', function() {
+        var promise = createPromise();
+        resolve(true);
+        expect(mockPromiseTracker.untrackedPromises.length).toBe(1);
+      });
     });
 
 
@@ -428,6 +453,12 @@ describe('q', function() {
         reject('detached');
         mockNextTick.flush();
         expect(logStr()).toBe('error(detached)->reject(detached)');
+      });
+
+      it('should untrack resolved promises', function() {
+        var promise = createPromise();
+        reject(true);
+        expect(mockPromiseTracker.untrackedPromises.length).toBe(1);
       });
     });
 
@@ -593,6 +624,19 @@ describe('q', function() {
           expect(log).toEqual(['error(oops!)->reject(oops!)']);
         });
 
+        it('should not be tracked as a separate promise', function() {
+          var promise = createPromise();
+          expect(mockPromiseTracker.trackedPromises.length).toBe(1);
+          expect(mockPromiseTracker.untrackedPromises.length).toBe(0);
+          
+          promise.then(1).
+                  then(null).
+                  then('hello world');
+          
+          expect(mockPromiseTracker.trackedPromises.length).toBe(1);
+          expect(mockPromiseTracker.untrackedPromises.length).toBe(0);
+        });
+
         it('should forward success resolution when success callbacks are not functions', function() {
           var promise = createPromise();
           resolve('yay!');
@@ -637,6 +681,20 @@ describe('q', function() {
           resolve('foo');
           mockNextTick.flush();
           expect(logStr()).toBe('finally1()');
+        });
+
+        it('should not be tracked as a separate promise', function() {
+          var promise = createPromise();
+          expect(mockPromiseTracker.trackedPromises.length).toBe(1);
+          expect(mockPromiseTracker.untrackedPromises.length).toBe(0);
+          
+          promise.then(1).
+                  then(null).
+                  then('hello world').
+                  finally(() => {});
+          
+          expect(mockPromiseTracker.trackedPromises.length).toBe(1);
+          expect(mockPromiseTracker.untrackedPromises.length).toBe(0);
         });
 
         describe("when the promise is fulfilled", function() {
@@ -698,6 +756,18 @@ describe('q', function() {
 
                 expect(logStr()).toBe('finally1()->{}; success2(foo)->foo');
               });
+
+              it("should untrack the promise", function() {
+                var promise = createPromise();
+                var promise2 = createPromise();
+                var untrackBefore = mockPromiseTracker.untrackedPromises.length;
+                resolve2('bar');
+                 promise['finally'](fin(1, promise))
+                       .then(success(2));
+                 resolve('foo');
+                mockNextTick.flush();
+                 expect(mockPromiseTracker.untrackedPromises.length).toBeGreaterThan(untrackBefore);
+              });
             });
 
             describe("that is rejected", function() {
@@ -712,6 +782,18 @@ describe('q', function() {
                 mockNextTick.flush();
                 expect(logStr()).toBe('finally1()->{}; error1(bar)->reject(bar)');
               });
+
+              it("should untrack the promise", function() {
+                var promise = createPromise();
+                var promise2 = createPromise();
+                var untrackBefore = mockPromiseTracker.untrackedPromises.length;
+                reject2('bar');
+                promise['finally'](fin(1, promise2))
+                       .then(success(2), error(1));
+                resolve('foo');
+                mockNextTick.flush();
+                 expect(mockPromiseTracker.untrackedPromises.length).toBeGreaterThan(untrackBefore);
+              });
             });
 
           });
@@ -724,6 +806,15 @@ describe('q', function() {
               resolve('foo');
               mockNextTick.flush();
               expect(logStr()).toBe('finally1()->throw(exception); error2(exception)->reject(exception)');
+            });
+
+            it("should untrack the promise", function() {
+              var promise = createPromise();
+              promise['finally'](fin(1, "exception", true))
+                     .then(success(1), error(2));
+              resolve('foo');
+              mockNextTick.flush();
+              expect(mockPromiseTracker.trackedPromises.length).toBe(mockPromiseTracker.untrackedPromises.length);
             });
           });
 
@@ -810,6 +901,11 @@ describe('q', function() {
       expect(deferred.reject).toBeDefined();
     });
 
+    it('should keep track of the new deferred', function() {
+      var promisesLength = mockPromiseTracker.trackedPromises.length;
+      defer();
+      expect(mockPromiseTracker.trackedPromises.length).toBe(promisesLength + 1);
+    });
 
     describe('resolve', function() {
       it('should fulfill the promise and execute all success callbacks in the registration order',
@@ -821,6 +917,11 @@ describe('q', function() {
         deferred.resolve('foo');
         mockNextTick.flush();
         expect(logStr()).toBe('success1(foo)->foo; success2(foo)->foo');
+      });
+
+      if('should untrack whenever deferred object gets resolved', function() {
+        deferred.resolve('foo');
+        expect(mockPromiseTracker.untrackedPromises.length).toBe(1);
       });
 
 
@@ -949,6 +1050,11 @@ describe('q', function() {
         expect(logStr()).toBe('error1(foo)->reject(foo); error2(foo)->reject(foo)');
       });
 
+
+      if('should untrack whenever deferred object gets rejected', function() {
+        deferred.resolve('foo');
+        expect(mockPromiseTracker.untrackedPromises.length).toBe(1);
+      });
 
       it('should do nothing if a promise was previously resolved', function() {
         promise.then(success(1), error(1));
