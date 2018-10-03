@@ -9,20 +9,25 @@
  *
  */
 function $$QPromiseTrackerProvider() {
-    var pendingCount = 0;
+    var pendingPromisesCount = 0;
 
     var trackNewPromise = function(promise) {
-        pendingCount++;
+        pendingPromisesCount++;
     };
 
     var untrackPromise = function(promise) {
-        pendingCount--;
+        pendingPromisesCount--;
+    };
+
+    var getPendingPromisesCount = function() {
+        return pendingPromisesCount;
     };
 
     this.$get = function() {
         return {
             track: trackNewPromise,
-            untrack: untrackPromise
+            untrack: untrackPromise,
+            getCount: getPendingPromisesCount
         };
     }
 }
