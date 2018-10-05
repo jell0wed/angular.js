@@ -263,11 +263,11 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
     return d;
   };
 
-  function Promise(keepTrack) {
+  function Promise() {
     this.$$state = { status: 0 };
 
     // some built-in angular module may use promises when the dependencies are not yet loaded, make sure not to track those
-    if (keepTrack || promiseTracker) {
+    if (promiseTracker) {
       this.keepTrack = keepTrack !== undefined ? keepTrack : true;
     }
   
@@ -281,7 +281,7 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
       if (isUndefined(onFulfilled) && isUndefined(onRejected) && isUndefined(progressBack)) {
         return this;
       }
-      var result = new Deferred(false); // do not track the .then() as separate promises
+      var result = new Deferred();
 
       this.$$state.pending = this.$$state.pending || [];
       this.$$state.pending.push([result, onFulfilled, onRejected, progressBack]);
@@ -291,11 +291,11 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
     },
 
     "catch": function(callback) {
-      return this.then(null, callback); // .catch() promises wont count as separate promises by using the .then() callback
+      return this.then(null, callback);
     },
 
     "finally": function(callback, progressBack) {
-      return this.then(function(value) { // .finally() promises wont count as separate promises by using the .then() callback
+      return this.then(function(value) {
         return handleCallback(value, true, callback);
       }, function(error) {
         return handleCallback(error, false, callback);
