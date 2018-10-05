@@ -37,10 +37,7 @@ describe('q', function() {
   // The following private functions are used to help with logging for testing invocation of the
   // promise callbacks.
   function _argToString(arg) {
-    var argCopy = arg;
-    // Fix for introducting the keepTrack state in promises
-    if(typeof arg === 'object' && arg.keepTrack) { delete argCopy.keepTrack; } 
-    return (typeof arg === 'object' && !(arg instanceof Error)) ? toJson(argCopy) : '' + arg;
+    return (typeof arg === 'object' && !(arg instanceof Error)) ? toJson(arg) : '' + arg;
   }
 
   function _argumentsToString(args) {
