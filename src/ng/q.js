@@ -263,7 +263,7 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
     return d;
   };
 
-  function Promise() {
+  function Promise(keepTrack) {
     this.$$state = { status: 0 };
 
     // some built-in angular module may use promises when the dependencies are not yet loaded, make sure not to track those

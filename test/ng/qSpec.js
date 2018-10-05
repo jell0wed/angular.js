@@ -624,7 +624,7 @@ describe('q', function() {
           expect(log).toEqual(['error(oops!)->reject(oops!)']);
         });
 
-        it('should not be tracked as a separate promise', function() {
+        it('should be tracked as a separate promise', function() {
           var promise = createPromise();
           expect(mockPromiseTracker.trackedPromises.length).toBe(1);
           expect(mockPromiseTracker.untrackedPromises.length).toBe(0);
@@ -633,7 +633,7 @@ describe('q', function() {
                   then(null).
                   then('hello world');
           
-          expect(mockPromiseTracker.trackedPromises.length).toBe(1);
+          expect(mockPromiseTracker.trackedPromises.length).toBe(4);
           expect(mockPromiseTracker.untrackedPromises.length).toBe(0);
         });
 
@@ -683,7 +683,7 @@ describe('q', function() {
           expect(logStr()).toBe('finally1()');
         });
 
-        it('should not be tracked as a separate promise', function() {
+        it('should be tracked as a separate promise', function() {
           var promise = createPromise();
           expect(mockPromiseTracker.trackedPromises.length).toBe(1);
           expect(mockPromiseTracker.untrackedPromises.length).toBe(0);
@@ -693,7 +693,7 @@ describe('q', function() {
                   then('hello world').
                   finally(() => {});
           
-          expect(mockPromiseTracker.trackedPromises.length).toBe(1);
+          expect(mockPromiseTracker.trackedPromises.length).toBe(5);
           expect(mockPromiseTracker.untrackedPromises.length).toBe(0);
         });
 
