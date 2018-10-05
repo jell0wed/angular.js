@@ -254,8 +254,8 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
    *
    * @returns {Deferred} Returns a new instance of deferred.
    */
-  var defer = function(keepTrack) {
-    var d = new Deferred(keepTrack);
+  var defer = function() {
+    var d = new Deferred();
     //Necessary to support unbound execution :/
     d.resolve = simpleBind(d, d.resolve);
     d.reject = simpleBind(d, d.reject);
@@ -263,17 +263,11 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
     return d;
   };
 
-  function Promise(keepTrack) {
+  function Promise() {
     this.$$state = { status: 0 };
 
     // some built-in angular module may use promises when the dependencies are not yet loaded, make sure not to track those
-    if (promiseTracker) {
-      this.keepTrack = keepTrack !== undefined ? keepTrack : true;
-    }
-  
-    if (this.keepTrack === true) {
-      promiseTracker.track(this);
-    }
+    promiseTracker && promiseTracker.track(this);
   }
 
   extend(Promise.prototype, {
@@ -340,8 +334,8 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
     nextTick(function() { processQueue(state); });
   }
 
-  function Deferred(keepTrack) {
-    this.promise = new Promise(keepTrack);
+  function Deferred() {
+    this.promise = new Promise();
   }
 
   extend(Deferred.prototype, {
@@ -370,9 +364,8 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
         } else {
           this.promise.$$state.value = val;
           this.promise.$$state.status = 1;
-          if (this.promise.keepTrack) {
-            promiseTracker.untrack(this.promise);
-          }
+
+          promiseTracker && promiseTracker.untrack(this.promise);
           scheduleProcessQueue(this.promise.$$state);
         }
       } catch (e) {
@@ -401,9 +394,7 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
       this.promise.$$state.value = reason;
       this.promise.$$state.status = 2;
 
-      if (this.promise.keepTrack) {
-        promiseTracker.untrack(this.promise);
-      }
+      promiseTracker && promiseTracker.untrack(this.promise);
       scheduleProcessQueue(this.promise.$$state);
     },
 
