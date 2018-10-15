@@ -757,13 +757,12 @@ describe('q', function() {
               it("should untrack the promise", function() {
                 var promise = createPromise();
                 var promise2 = createPromise();
-                var untrackBefore = mockPromiseTracker.untrackedPromises.length;
                 resolve2('bar');
                  promise['finally'](fin(1, promise))
                        .then(success(2));
                  resolve('foo');
                 mockNextTick.flush();
-                 expect(mockPromiseTracker.untrackedPromises.length).toBeGreaterThan(untrackBefore);
+                expect(mockPromiseTracker.untrackedPromises.length).toBe(8);
               });
             });
 
