@@ -267,7 +267,7 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
     this.$$state = { status: 0 };
 
     // some built-in angular module may use promises when the dependencies are not yet loaded, make sure not to track those
-    promiseTracker && promiseTracker.track(this);
+    promiseTracker.track(this);
   }
 
   extend(Promise.prototype, {
@@ -365,7 +365,7 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
           this.promise.$$state.value = val;
           this.promise.$$state.status = 1;
 
-          promiseTracker && promiseTracker.untrack(this.promise);
+          promiseTracker.untrack(this.promise);
           scheduleProcessQueue(this.promise.$$state);
         }
       } catch (e) {
@@ -394,7 +394,7 @@ function qFactory(nextTick, exceptionHandler, promiseTracker) {
       this.promise.$$state.value = reason;
       this.promise.$$state.status = 2;
 
-      promiseTracker && promiseTracker.untrack(this.promise);
+      promiseTracker.untrack(this.promise);
       scheduleProcessQueue(this.promise.$$state);
     },
 
